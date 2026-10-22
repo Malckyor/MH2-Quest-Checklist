@@ -23,6 +23,9 @@ This tool solves that on two levels:
 1. **Complete list, always visible** — every quest (Village, Town and Events) with season, fee, reward, HRP, time, locale and goals, in English and/or Japanese;
 2. **Save import** — load a `.psu` save file and the tool decodes it, reads each quest's completion flag and automatically marks **what that character has already completed**. Whatever remains unmarked is exactly what is left to do.
 
+Preview:
+<img width="1151" height="719" alt="image" src="https://github.com/user-attachments/assets/4b94bc23-c90d-4dcb-a74f-0b75f4b6444e" />
+
 ## How it works
 
 ### For the user
