@@ -323,15 +323,19 @@ as noted):
 bit = 129 + global position
 byte = 0x200C + (bit / 8) ; mask = 1 << (bit % 8)
 
-Category order and bit ranges (198 slots, bits 129-326):
+Category order and bit ranges — corrected (see §8.0.3 for the defense fix):
+
 practice     129-142 (14 quests, IDs 2711-2779)
 free_low     143-211 (69 quests, IDs 2AF9-2B3D)   = 143 + pos
 free_high    212-291 (80 quests, IDs 2EE1-2F30)   = 212 + pos
 exams        292-315 (24 slots: 17 exams (3A99-3AAF) + 2 slots WITHOUT
                        a quests.json counterpart (bits 309/310) + 5 exams
                        (3AB0, 3AA5, 3AA9, 3AAC, 3AAD) in json order)
-defense      316-325 (10 quests, IDs 4E21-4E2A)
-tournament   326     (1 quest,  ID 61A9)
+defense      316-326 (11 slots: IDs 4E21-4E2A sorted + 1 empty slot at
+                       bit 322, between 4E26 (321) and 4E27 (323); always
+                       zero in every known save)
+tournament   —       (61A9: NO completion flag in the savestate — the
+                       Grand Tournament never marks; manual tracking only)
 ```
 
 ### 8.0.2 Global model: `bit = 129 + pos` over all Town quests
@@ -388,7 +392,49 @@ the saves: Pandora/Alexia = 0 everywhere).
   by ID + tournament at 324 produced "3AAC/3AAD not completed" and a
   direct disagreement with the user.
 
-### 8.0.1 Evidence (verified byte-by-byte on the 6 saves)
+### 8.0.3 Correction: defense has 1 extra slot; tournament 61A9 has NO flag (2026-10-22)
+
+The §8.0.2 model (defense = 316-325 ID-ascending, tournament 61A9 = bit 326)
+was WRONG for the defense tail. Measured with the Malckyor pair
+`(786F1CE3)` (old, 4E28 done, 4E27 not) → `mal 4e27 (8B8EE8E1)` (new, in-game
+shows 4E27 AND 4E28 completed):
+
+- Completing **4E27 gained exactly bit 323** (`0x2034` mask `0x08`) — not
+  322, which both ID-order and json-order would predict. 
+- Old save defense-range sets: `{317, 318, 320, 321, 324, 325}` — i.e.
+  under the corrected map: **4E22, 4E23, 4E25, 4E26, 4E28, 4E29, 4E2A**
+  (bit 324 = 4E28 done, matching the user's report that 4E28 was already
+  complete in the old save); unset: 316 (4E21), 319 (4E24), 322.
+- The earlier "done: 4E22, 4E23, 4E25, 4E26, 4E29, 4E2A / 6/10" prediction
+  happened to match the 6 set bits exactly — but the identity was derived
+  from the old (wrong) model, so it is not independent evidence.
+
+Corrected defense layout:
+
+```
+bit 316 = 4E21 (Repel Lao-Shan Lung! 4★,  unset in Malckyor)
+bit 317 = 4E22 (Repel Kushala Daora! 4★,  set)
+bit 318 = 4E23 (Repel the Emperor 4★,     set)
+bit 319 = 4E24 (Repel Lao-Shan 8★,        unset)
+bit 320 = 4E25 (Repel Ashen Lao 8★,       set)
+bit 321 = 4E26 (Repel the Strange 8★,     set)
+bit 322 = EMPTY (unlisted slot; always zero in all known saves —
+          candidate: an unlisted defense battle, or an event-quest slot)
+bit 323 = 4E27 (Slay a Kushala Daora!,    set after this save pair) *
+bit 324 = 4E28 (Slay the Emperor of Flame!, set)
+bit 325 = 4E29 (Defeat the Mysterious Dragon!, set)
+bit 326 = 4E2A (Slay Yama Tsukami!,       set)
+```
+
+- **Tournament 61A9 = no flag.** Malckyor has the Grand Tournament done
+  (user in-game confirmation 2026-10-22), yet bits 327+ are all zero in
+  both saves. The set bit 326 belongs to 4E2A, not 61A9. The tournament
+  therefore never marks in the savestate (event-like quest) → manual
+  tracking only.
+- Implementations must: defense = ID-ascending with ONE skipped bit after
+  4E26 (bit 322), and 61A9 excluded from the bitfield map.
+
+### 8.0.1 Evidence (verified byte-by-byte on the saves)
 
 | Quest | Cat | pos | bit | byte | mask | Gained in |
 |-------|-----|-----|-----|------|------|-----------|
@@ -396,6 +442,7 @@ the saves: Pandora/Alexia = 0 everywhere).
 | `2B0B` (Leaping in the Desert) | free_low | 18 | 161 | `0x2020` | 0x02 | ale2 → ale3 |
 | `2B1A` (A Reckless Rush) | free_low | 33 | 176 | `0x2022` | 0x01 | ale1 → ale2 |
 | `2F01` | free_high | 32 | 244 | `0x202A` | 0x10 | malA → malB (Malckyor `0xC7`→`0xD7`) |
+| `4E27` (Slay a Kushala Daora!) | defense | 7 | 323 | `0x2034` | 0x08 | save `(786F1CE3)` → `mal 4e27 (8B8EE8E1)` — exactly ONE new bit in the defense range (+2F01 earlier progress); game showed 4E27 done |
 
 Controls (coherence): `2AF9` (pos 0, bit 143), `2AFE` (pos 5, bit 148)
 and `2AFF` (pos 6, bit 149) **zero** across Alexia's whole chain (never
@@ -453,10 +500,14 @@ position gap (33 − 18).
 - **Village**: per-quest possible (bitmap bits 0–128 `0x200C`, already
   implemented).
 - **Town**: per-quest possible **in the same structure** — global model
-  `bit = 129 + pos` (§8.0.2), implemented in `Services/TownQuestMap.cs`
-  (order: practice, free_low, free_high, exams, defense, tournament;
-  each by ID except exams = json order with a 2-slot skip after index
-  16).
-- Pending: (1) the 2 unknown slots (309/310) — candidates `3AAB` and/or
-  events; (2) in-game confirmation of the defense list (availability-
-  gated quests).
+  `bit = 129 + pos` (§8.0.2, corrected by §8.0.3), implemented in
+  `Services/TownQuestMap.cs` (order: practice, free_low, free_high, exams,
+  defense, tournament; each by ID except exams = json order with a 2-slot
+  skip after index 16, and defense with a 1-slot skip after 4E26).
+- **Tournament 61A9**: no flag in the savestate (§8.0.3) — the tool does
+  not auto-mark it; mark it manually in the Town groups (it never marks,
+  like Events).
+- Pending: (1) the 2 unknown empty slots (309/310) and 1 defense empty
+  slot (322) — candidates: `3AAB`, unlisted defense battles and/or event
+  quests; (2) future single-quest flips to pin 4E21/4E24 expecting bits
+  316/319 under the corrected map.
