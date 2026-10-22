@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>MH2QuestChecklist</AssemblyName>
+    <RootNamespace>MH2QuestChecklist</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="data\quests.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Create an empty savedata/ in the output at build time (working
+       folder for save files; DO NOT copy the project's savedata docs). -->
+  <Target Name="EnsureSavedataDir" AfterTargets="Build">
+    <PropertyGroup>
+      <_OutDir Condition="HasTrailingSlash('$(OutputPath)')">$(OutputPath)</_OutDir>
+      <_OutDir Condition="!HasTrailingSlash('$(OutputPath)')">$(OutputPath)\</_OutDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(_OutDir)savedata" />
+  </Target>
+
+</Project>

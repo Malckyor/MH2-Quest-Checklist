@@ -1,0 +1,778 @@
+<Window x:Class="MH2QuestChecklist.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:MH2QuestChecklist.ViewModels"
+        Title="{Binding AppTitle}"
+        Height="760" Width="1180"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackground}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="GridViewColumnHeader">
+            <EventSetter Event="Click" Handler="ColumnHeader_Click"/>
+            <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderPrimary}"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GridViewColumnHeader">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="0,0,1,1"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonPressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RowItem" TargetType="ListViewItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource RowBorder}"
+                                BorderThickness="0,0,0,1"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Accent" Grid.Column="0" Background="Transparent"/>
+                                <GridViewRowPresenter Grid.Column="1"
+                                    Columns="{TemplateBinding GridView.ColumnCollection}"
+                                    Content="{TemplateBinding Content}"
+                                    Margin="{TemplateBinding Padding}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Completed}" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CompletedBackground}"/>
+                                <Setter TargetName="Accent" Property="Background" Value="{DynamicResource CompletedAccent}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource CompletedForeground}"/>
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToggleButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Background" Value="{DynamicResource ButtonBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSecondary}"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonHover}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BorderPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonPressed}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="GroupButton" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Background" Value="{DynamicResource PrimaryBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderPrimary}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="10,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Accent" Grid.Column="0" Background="Transparent"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsComplete}" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CompletedBackground}"/>
+                                <Setter TargetName="Accent" Property="Background" Value="{DynamicResource CompletedAccent}"/>
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedAccent}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource SelectedAccentBorder}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CategoryItem" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Accent" Grid.Column="0" Background="Transparent"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Left"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsComplete}" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CompletedBackground}"/>
+                                <Setter TargetName="Accent" Property="Background" Value="{DynamicResource CompletedAccent}"/>
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBackground}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SaveComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSecondary}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Focusable="False"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4"
+                                                Padding="{Binding Padding, RelativeSource={RelativeSource AncestorType=ComboBox}}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Grid.Column="0"
+                                                                  Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                  ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                  ContentTemplateSelector="{Binding ItemTemplateSelector, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="0"/>
+                                                <Path Grid.Column="1"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Data="M 0 0 L 4 4 L 8 0 Z"
+                                                      Fill="{DynamicResource TextPrimary}"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonHover}"/>
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BorderPrimary}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonPressed}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown"
+                                      SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="{DynamicResource SurfaceBackground}"
+                                            BorderBrush="{DynamicResource BorderPrimary}"
+                                            BorderThickness="1"
+                                            CornerRadius="4"/>
+                                    <ScrollViewer Margin="1,1,1,1" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="{DynamicResource SurfaceBackground}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+                        <Setter Property="Padding" Value="6,3"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBackground}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="{x:Type ScrollBar}">
+            <Setter Property="Background" Value="{DynamicResource ScrollBarBackground}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Style>
+                                            <Style TargetType="{x:Type Thumb}">
+                                                <Setter Property="Background" Value="{DynamicResource ScrollBarThumb}"/>
+                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="{x:Type Thumb}">
+                                                            <Border Background="{TemplateBinding Background}" CornerRadius="5"/>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="{DynamicResource ScrollBarThumbHover}"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsDragging" Value="True">
+                                                                    <Setter Property="Background" Value="{DynamicResource ScrollBarThumbPressed}"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Thumb.Style>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="10"/>
+                    <Setter Property="MinHeight" Value="10"/>
+                    <Setter Property="Width" Value="Auto"/>
+                    <Setter Property="MinWidth" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ScrollBar}">
+                                <Grid Background="{TemplateBinding Background}">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                        <Track.Thumb>
+                                            <Thumb>
+                                                <Thumb.Style>
+                                                    <Style TargetType="{x:Type Thumb}">
+                                                        <Setter Property="Background" Value="{DynamicResource ScrollBarThumb}"/>
+                                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="{x:Type Thumb}">
+                                                                    <Border Background="{TemplateBinding Background}" CornerRadius="5"/>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Background" Value="{DynamicResource ScrollBarThumbHover}"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsDragging" Value="True">
+                                                                            <Setter Property="Background" Value="{DynamicResource ScrollBarThumbPressed}"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Thumb.Style>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel LastChildFill="True">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource TopBarBackground}" Padding="12,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding AppTitle}"
+                                   FontSize="16" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding OverallCaption}" FontSize="13" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="{Binding OverallProgress}" FontSize="13"
+                                   FontWeight="Bold" Foreground="{DynamicResource CompletedAccent}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding FooterText}"
+                               FontSize="9"
+                               Margin="2,0,0,0"
+                               Opacity="0.6"
+                               HorizontalAlignment="Left"
+                               Foreground="{DynamicResource TextMuted}"
+                               Cursor="Hand"
+                               MouseLeftButtonDown="Footer_MouseLeftButtonDown"
+                               ToolTip="{Binding FooterTooltip}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="1.0"/>
+                                        <Setter Property="Foreground" Value="#FF6E9BE0"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource ToggleButton}"
+                            Content="{Binding LoadSaveLabel}"
+                            Click="OnLoadSaveClick"
+                            Margin="0,0,12,0"/>
+                    <ComboBox ItemsSource="{Binding Slots}"
+                              SelectedItem="{Binding SelectedSlot, Mode=TwoWay}"
+                              Visibility="{Binding HasSlots, Converter={StaticResource BoolToVisibility}}"
+                              Width="170"
+                              MaxWidth="170"
+                              Margin="0,0,12,0"
+                              VerticalAlignment="Center"
+                              Background="{DynamicResource ButtonBackground}"
+                              Foreground="{DynamicResource TextPrimary}"
+                              BorderBrush="{DynamicResource BorderSecondary}"
+                              MaxDropDownHeight="140"
+                              Style="{StaticResource SaveComboBoxStyle}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextPrimary}" FontSize="12"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Text="{Binding ThemeCaption}" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource ToggleButton}"
+                            Content="{Binding ThemeLabel}"
+                            Click="ToggleTheme_Click"
+                            Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding LanguageCaption}" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource ToggleButton}"
+                            Content="{Binding LanguageLabel}"
+                            Click="ToggleLanguage_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ListBox DockPanel.Dock="Top"
+                 ItemsSource="{Binding Groups}"
+                 SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Margin="4,8,4,0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1"/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource GroupButton}">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Header}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid Margin="8,6,8,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{DynamicResource PanelBackground}" CornerRadius="6" Padding="6">
+                <ListBox ItemsSource="{Binding SelectedGroup.Categories}"
+                         SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                         ItemContainerStyle="{StaticResource CategoryItem}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Header}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Progress, StringFormat='({0})'}"
+                                           Foreground="{DynamicResource TextMuted}" FontSize="11"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <DockPanel Grid.Column="1" Margin="8,0,0,0" LastChildFill="True">
+                <Border DockPanel.Dock="Top" Margin="0,0,0,6" Padding="6" Background="{DynamicResource PanelBackground}" CornerRadius="6">
+                    <Grid>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="{DynamicResource SurfaceBackground}"
+                                 Foreground="{DynamicResource TextPrimary}"
+                                 BorderBrush="{DynamicResource BorderPrimary}"
+                                 Padding="8,4"
+                                 VerticalContentAlignment="Center"/>
+                        <TextBlock Text="{Binding SearchHint}"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   IsHitTestVisible="False"/>
+                    </Grid>
+                </Border>
+
+                <ListView DataContext="{Binding SelectedCategory}"
+                          ItemsSource="{Binding Items}"
+                          Background="{DynamicResource SurfaceBackground}"
+                          BorderThickness="0"
+                          ItemContainerStyle="{StaticResource RowItem}"
+                          PreviewMouseLeftButtonUp="QuestList_PreviewMouseLeftButtonUp"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListView.View>
+                        <GridView>
+                        <GridViewColumn Width="40">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColCheck, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowCheck, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Completed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="60" DisplayMemberBinding="{Binding Source.Hex}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColNo, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowNo, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="60" DisplayMemberBinding="{Binding DisplayStars}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColStars, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowStars, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="260" DisplayMemberBinding="{Binding DisplayName}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColQuest, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowQuest, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="90">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColSeason, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowSeason, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplaySeason}" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Source.SeasonClass}" Value="season-summer">
+                                                        <Setter Property="Foreground" Value="{DynamicResource SeasonSummer}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Source.SeasonClass}" Value="season-winter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource SeasonWinter}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Source.SeasonClass}" Value="season-breeding">
+                                                        <Setter Property="Foreground" Value="{DynamicResource SeasonBreeding}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="70" DisplayMemberBinding="{Binding DisplayFee}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColFee, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowFee, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="120" DisplayMemberBinding="{Binding DisplayReward}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColReward, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowReward, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="100" DisplayMemberBinding="{Binding DisplayHrp}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColHrp, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowHrp, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="70" DisplayMemberBinding="{Binding DisplayTime}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColTime, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowTime, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="90" DisplayMemberBinding="{Binding DisplayLocale}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColLocale, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowLocale, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="130" DisplayMemberBinding="{Binding DisplayRequirements}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColRequirements, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowRequirements, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="300" DisplayMemberBinding="{Binding DisplayGoals}">
+                            <GridViewColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DataContext.ColGoals, RelativeSource={RelativeSource AncestorType=ListView}}" HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DataContext.ArrowGoals, RelativeSource={RelativeSource AncestorType=ListView}}" Margin="6,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.HeaderTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                    </ListView.View>
+                </ListView>
+            </DockPanel>
+        </Grid>
+
+    </DockPanel>
+</Window>

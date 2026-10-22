@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="WindowBackground" Color="#FFF5F5F5"/>
+    <SolidColorBrush x:Key="TopBarBackground" Color="#FFEDEDED"/>
+    <SolidColorBrush x:Key="PrimaryBackground" Color="#FFE6E6E6"/>
+    <SolidColorBrush x:Key="SurfaceBackground" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="PanelBackground" Color="#FFEDEDED"/>
+    <SolidColorBrush x:Key="TextPrimary" Color="#FF1F1F1F"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#FF4F4F4F"/>
+    <SolidColorBrush x:Key="TextMuted" Color="#FF6F6F6F"/>
+    <SolidColorBrush x:Key="BorderPrimary" Color="#FFC9C9C9"/>
+    <SolidColorBrush x:Key="BorderSecondary" Color="#FFB9B9B9"/>
+    <SolidColorBrush x:Key="RowBorder" Color="#FFE0E0E0"/>
+    <SolidColorBrush x:Key="HoverBackground" Color="#FFEAEAEA"/>
+    <SolidColorBrush x:Key="HoverPrimary" Color="#FFE0E0E0"/>
+    <SolidColorBrush x:Key="SelectedBackground" Color="#FFDFE8F8"/>
+    <SolidColorBrush x:Key="SelectedAccent" Color="#FF6E9BE0"/>
+    <SolidColorBrush x:Key="SelectedAccentBorder" Color="#FF3E5C8A"/>
+    <SolidColorBrush x:Key="CompletedBackground" Color="#FFE8F6ED"/>
+    <SolidColorBrush x:Key="CompletedAccent" Color="#FF3FBF6E"/>
+    <SolidColorBrush x:Key="CompletedForeground" Color="#FF256F3A"/>
+    <SolidColorBrush x:Key="SeasonSummer" Color="#FFD96C2B"/>
+    <SolidColorBrush x:Key="SeasonWinter" Color="#FF2F7FBF"/>
+    <SolidColorBrush x:Key="SeasonBreeding" Color="#FF3FBF6E"/>
+    <SolidColorBrush x:Key="ButtonBackground" Color="#FFE6E6E6"/>
+    <SolidColorBrush x:Key="ButtonHover" Color="#FFDCDCDC"/>
+    <SolidColorBrush x:Key="ButtonPressed" Color="#FFD0D0D0"/>
+    <SolidColorBrush x:Key="ScrollBarBackground" Color="#FFF0F0F0"/>
+    <SolidColorBrush x:Key="ScrollBarThumb" Color="#FF6E9BE0"/>
+    <SolidColorBrush x:Key="ScrollBarThumbHover" Color="#FF3E5C8A"/>
+    <SolidColorBrush x:Key="ScrollBarThumbPressed" Color="#FF2C4A7A"/>
+    <SolidColorBrush x:Key="ScrollBarArrow" Color="#FF4F4F4F"/>
+</ResourceDictionary>
